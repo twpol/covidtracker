@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Map - COVID-19 Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap" rel="stylesheet">
+  
+<script src="https://api.mapbox.com/mapbox-gl-js/v1.11.0/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v1.11.0/mapbox-gl.css" rel="stylesheet" />
+
+  <style>
+    body {
+      color: #333;
+      font-family: 'Noto Sans', sans-serif;
+    }
+
+    a, a:visited, a:hover {
+      color: #323;
+    }
+
+    .footnote {
+      font-size: 0.7em;
+    }
+
+    table.sources {
+      font-size: 0.8em;
+    }
+
+    #body {
+      width: 80%;
+      margin: auto;
+      min-width: 700px;
+      max-width: 1200px;
+    }
+
+    .graph {
+      margin-bottom: 2em;
+      min-height: 250px;
+    }
+
+    table {
+      border-spacing: 0;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 8px;
+    }
+
+    td, th {
+      padding: 3px;
+    }
+
+    td.score {
+      text-align: center;
+      width: 100px;
+    }
+
+    tfoot {
+      font-size: 0.7em;
+      color: #666;
+      text-align: center;
+    }
+
+    .score_rise_small {
+      background-color: #DEB4AF;
+    }
+
+    .score_rise_large {
+      background-color: #DE5243;
+      color: #eee;
+    }
+
+    .score_fall_small {
+      background-color: #AFB9DE;
+    }
+
+    .score_fall_large {
+      background-color: #4362DE;
+      color: #eee;
+    }
+
+    .score_neutral {
+      background-color: #DEDEDE;
+    }
+    
+    #footer {
+      color: #666;
+      margin-top: 10em;
+      width: 100%;
+      text-align: center;
+      font-size: 0.7em;
+    }
+
+    #map {
+      width: 100%;
+      height: 900px;
+    }
+  </style>
+</head>
+<body>
+  <noscript>I'm afraid you will need Javascript enabled to view the graphs.</noscript>
+  
+<div id="body">
+  <h1>COVID-19 Hotspot Map</h1>
+  <p>This map shows the last week's number of positive "pillar 1" COVID-19 cases per capita, by local authority district -
+      these are positive tests in hospital patients or NHS staff, and so represent a small proportion of total
+      cases. Nonetheless, it should be representative of the relative prevalence of COVID-19 across England.</p>
+  <div id="map"></div>
+</div>
+<script>
+
+const data = {"E06000001": {"prevalence": 7.507346474764592e-05, "cases": 7, "cases_prev_week": 10}, "E06000002": {"prevalence": 3.557579422960618e-05, "cases": 5, "cases_prev_week": 9}, "E06000003": {"prevalence": 7.3143258385874575e-06, "cases": 1, "cases_prev_week": 3}, "E06000004": {"prevalence": 8.113055427380547e-05, "cases": 16, "cases_prev_week": 15}, "E06000005": {"prevalence": 6.568699209879324e-05, "cases": 7, "cases_prev_week": 8}, "E06000006": {"prevalence": 2.3358664507287902e-05, "cases": 3, "cases_prev_week": 2}, "E06000007": {"prevalence": 5.726638892468038e-05, "cases": 12, "cases_prev_week": 12}, "E06000008": {"prevalence": 2.6856091632984652e-05, "cases": 4, "cases_prev_week": 4}, "E06000009": {"prevalence": 6.460643910843115e-05, "cases": 9, "cases_prev_week": 17}, "E06000010": {"prevalence": 0.00010358917301310211, "cases": 27, "cases_prev_week": 16}, "E06000011": {"prevalence": 5.5945867955973547e-05, "cases": 19, "cases_prev_week": 14}, "E06000012": {"prevalence": 1.2514000037542e-05, "cases": 2, "cases_prev_week": 5}, "E06000013": {"prevalence": 5.813784483009215e-06, "cases": 1, "cases_prev_week": 4}, "E06000014": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E06000015": {"prevalence": 5.443785141577298e-05, "cases": 14, "cases_prev_week": 14}, "E06000016": {"prevalence": 0.00012386759679971173, "cases": 44, "cases_prev_week": 29}, "E06000017": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E06000018": {"prevalence": 1.5102591906823048e-05, "cases": 5, "cases_prev_week": 5}, "E06000019": {"prevalence": 3.6438026724689884e-05, "cases": 7, "cases_prev_week": 14}, "E06000020": {"prevalence": 1.1248657191547758e-05, "cases": 2, "cases_prev_week": 2}, "E06000021": {"prevalence": 8.990239726696712e-05, "cases": 23, "cases_prev_week": 24}, "E06000022": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 2}, "E06000023": {"prevalence": 1.2947637595623698e-05, "cases": 6, "cases_prev_week": 6}, "E06000024": {"prevalence": 3.2722666055843566e-05, "cases": 7, "cases_prev_week": 16}, "E06000025": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 2}, "E06000026": {"prevalence": 1.1402508551881415e-05, "cases": 3, "cases_prev_week": 3}, "E06000027": {"prevalence": 1.4729709824716453e-05, "cases": 2, "cases_prev_week": 1}, "E06000030": {"prevalence": 9.009171336420476e-06, "cases": 2, "cases_prev_week": 3}, "E06000031": {"prevalence": 7.958575613929497e-05, "cases": 16, "cases_prev_week": 6}, "E06000032": {"prevalence": 6.538725602380096e-05, "cases": 14, "cases_prev_week": 25}, "E06000033": {"prevalence": 0.00017537802184552483, "cases": 32, "cases_prev_week": 3}, "E06000034": {"prevalence": 0.00013331401246196204, "cases": 23, "cases_prev_week": 10}, "E06000035": {"prevalence": 2.519299634701553e-05, "cases": 7, "cases_prev_week": 12}, "E06000036": {"prevalence": 1.6437095236529802e-05, "cases": 2, "cases_prev_week": 2}, "E06000037": {"prevalence": 6.308073703533152e-06, "cases": 1, "cases_prev_week": 2}, "E06000038": {"prevalence": 1.22546766909922e-05, "cases": 2, "cases_prev_week": 4}, "E06000039": {"prevalence": 1.341273673480337e-05, "cases": 2, "cases_prev_week": 3}, "E06000040": {"prevalence": 6.626641750493685e-06, "cases": 1, "cases_prev_week": 9}, "E06000041": {"prevalence": 1.785937527905274e-05, "cases": 3, "cases_prev_week": 5}, "E06000042": {"prevalence": 3.7229111676166293e-06, "cases": 1, "cases_prev_week": 1}, "E06000043": {"prevalence": 3.787944007300401e-05, "cases": 11, "cases_prev_week": 21}, "E06000044": {"prevalence": 9.296574677060237e-06, "cases": 2, "cases_prev_week": 3}, "E06000045": {"prevalence": 2.3734552761910788e-05, "cases": 6, "cases_prev_week": 13}, "E06000046": {"prevalence": 7.065240430131837e-06, "cases": 1, "cases_prev_week": 1}, "E06000047": {"prevalence": 2.0873657444305287e-05, "cases": 11, "cases_prev_week": 16}, "E06000049": {"prevalence": 9.454029780193807e-05, "cases": 36, "cases_prev_week": 25}, "E06000050": {"prevalence": 7.635784811836642e-05, "cases": 26, "cases_prev_week": 35}, "E06000051": {"prevalence": 8.742514222197244e-05, "cases": 28, "cases_prev_week": 23}, "E06000052": {"prevalence": 8.834421734090974e-06, "cases": 5, "cases_prev_week": 10}, "E06000054": {"prevalence": 4.015548202640625e-06, "cases": 2, "cases_prev_week": 5}, "E06000055": {"prevalence": 0.00025054916881769927, "cases": 43, "cases_prev_week": 32}, "E06000056": {"prevalence": 0.00011988462867499277, "cases": 34, "cases_prev_week": 23}, "E06000057": {"prevalence": 4.059024460305863e-05, "cases": 13, "cases_prev_week": 17}, "E06000058": {"prevalence": 7.579892062337032e-06, "cases": 3, "cases_prev_week": 5}, "E06000059": {"prevalence": 2.6561553744647845e-06, "cases": 1, "cases_prev_week": 2}, "E07000004": {"prevalence": 1.0027676386827645e-05, "cases": 2, "cases_prev_week": 6}, "E07000005": {"prevalence": 1.0424593701460485e-05, "cases": 1, "cases_prev_week": 3}, "E07000006": {"prevalence": 1.4276944162871379e-05, "cases": 1, "cases_prev_week": 1}, "E07000007": {"prevalence": 2.290412904186302e-05, "cases": 4, "cases_prev_week": 5}, "E07000008": {"prevalence": 7.951780403632373e-06, "cases": 1, "cases_prev_week": 4}, "E07000009": {"prevalence": 1.1190438889013228e-05, "cases": 1, "cases_prev_week": 1}, "E07000010": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000011": {"prevalence": 1.1277008435202309e-05, "cases": 2, "cases_prev_week": 23}, "E07000012": {"prevalence": 1.2696881011179603e-05, "cases": 2, "cases_prev_week": 4}, "E07000026": {"prevalence": 3.07607124180996e-05, "cases": 3, "cases_prev_week": 2}, "E07000027": {"prevalence": 2.9789832730089222e-05, "cases": 2, "cases_prev_week": 1}, "E07000028": {"prevalence": 1.8452397427735797e-05, "cases": 2, "cases_prev_week": 2}, "E07000029": {"prevalence": 4.3844265170115746e-05, "cases": 3, "cases_prev_week": 14}, "E07000030": {"prevalence": 1.8910383691685104e-05, "cases": 1, "cases_prev_week": 3}, "E07000031": {"prevalence": 3.8265794206558755e-05, "cases": 4, "cases_prev_week": 8}, "E07000032": {"prevalence": 3.1576122136440424e-05, "cases": 4, "cases_prev_week": 4}, "E07000033": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 2}, "E07000034": {"prevalence": 3.823068394693581e-05, "cases": 4, "cases_prev_week": 1}, "E07000035": {"prevalence": 2.7786654070050154e-05, "cases": 2, "cases_prev_week": 2}, "E07000036": {"prevalence": 5.195255000432938e-05, "cases": 6, "cases_prev_week": 6}, "E07000037": {"prevalence": 0.00013012220643888052, "cases": 12, "cases_prev_week": 8}, "E07000038": {"prevalence": 9.888751545117428e-06, "cases": 1, "cases_prev_week": 3}, "E07000039": {"prevalence": 1.9140038088675795e-05, "cases": 2, "cases_prev_week": 4}, "E07000040": {"prevalence": 6.929190601245869e-06, "cases": 1, "cases_prev_week": 0}, "E07000041": {"prevalence": 1.5334130708130157e-05, "cases": 2, "cases_prev_week": 1}, "E07000042": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 2}, "E07000043": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000044": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000045": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000046": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000047": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000061": {"prevalence": 1.9387359441644047e-05, "cases": 2, "cases_prev_week": 1}, "E07000062": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000063": {"prevalence": 2.919878533053025e-05, "cases": 3, "cases_prev_week": 5}, "E07000064": {"prevalence": 3.136238186836163e-05, "cases": 3, "cases_prev_week": 2}, "E07000065": {"prevalence": 3.121585765568909e-05, "cases": 5, "cases_prev_week": 5}, "E07000066": {"prevalence": 0.00015064940654894491, "cases": 28, "cases_prev_week": 5}, "E07000067": {"prevalence": 6.5980034441577976e-06, "cases": 1, "cases_prev_week": 4}, "E07000068": {"prevalence": 1.3063357282821685e-05, "cases": 1, "cases_prev_week": 1}, "E07000069": {"prevalence": 0.00017763961363384035, "cases": 16, "cases_prev_week": 4}, "E07000070": {"prevalence": 2.2588788055048878e-05, "cases": 4, "cases_prev_week": 4}, "E07000071": {"prevalence": 1.0388369181863985e-05, "cases": 2, "cases_prev_week": 5}, "E07000072": {"prevalence": 7.625612908637531e-06, "cases": 1, "cases_prev_week": 3}, "E07000073": {"prevalence": 1.1548144213224934e-05, "cases": 1, "cases_prev_week": 1}, "E07000074": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000075": {"prevalence": 0.00013796116393235305, "cases": 12, "cases_prev_week": 5}, "E07000076": {"prevalence": 6.858569439586291e-06, "cases": 1, "cases_prev_week": 4}, "E07000077": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000078": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000079": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000080": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000081": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000082": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000083": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000084": {"prevalence": 1.707174114687957e-05, "cases": 3, "cases_prev_week": 5}, "E07000085": {"prevalence": 2.485892559723569e-05, "cases": 3, "cases_prev_week": 1}, "E07000086": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 2}, "E07000087": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000088": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000089": {"prevalence": 1.0384970870156709e-05, "cases": 1, "cases_prev_week": 1}, "E07000090": {"prevalence": 7.94830422929268e-06, "cases": 1, "cases_prev_week": 1}, "E07000091": {"prevalence": 1.668956846339143e-05, "cases": 3, "cases_prev_week": 2}, "E07000092": {"prevalence": 3.153181560194236e-05, "cases": 3, "cases_prev_week": 6}, "E07000093": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 2}, "E07000094": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000095": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000096": {"prevalence": 2.5926886180969666e-05, "cases": 4, "cases_prev_week": 3}, "E07000098": {"prevalence": 3.83858739983686e-05, "cases": 4, "cases_prev_week": 2}, "E07000099": {"prevalence": 2.252015553920759e-05, "cases": 3, "cases_prev_week": 1}, "E07000102": {"prevalence": 4.298995109893062e-05, "cases": 4, "cases_prev_week": 2}, "E07000103": {"prevalence": 8.267281201235958e-05, "cases": 8, "cases_prev_week": 7}, "E07000105": {"prevalence": 0.00023205266048375244, "cases": 30, "cases_prev_week": 28}, "E07000106": {"prevalence": 6.0770693940554104e-05, "cases": 10, "cases_prev_week": 14}, "E07000107": {"prevalence": 9.115022468530384e-05, "cases": 10, "cases_prev_week": 12}, "E07000108": {"prevalence": 0.00011114055860954612, "cases": 13, "cases_prev_week": 14}, "E07000109": {"prevalence": 0.00014099732105090002, "cases": 15, "cases_prev_week": 25}, "E07000110": {"prevalence": 4.707128357506399e-05, "cases": 8, "cases_prev_week": 9}, "E07000111": {"prevalence": 4.156517835618033e-05, "cases": 5, "cases_prev_week": 9}, "E07000112": {"prevalence": 7.106184156762423e-05, "cases": 8, "cases_prev_week": 11}, "E07000113": {"prevalence": 4.713201677899797e-05, "cases": 7, "cases_prev_week": 27}, "E07000114": {"prevalence": 2.1153724113130116e-05, "cases": 3, "cases_prev_week": 8}, "E07000115": {"prevalence": 1.5324731050970056e-05, "cases": 2, "cases_prev_week": 12}, "E07000116": {"prevalence": 7.623629864299389e-05, "cases": 9, "cases_prev_week": 30}, "E07000117": {"prevalence": 2.2591977588758233e-05, "cases": 2, "cases_prev_week": 2}, "E07000118": {"prevalence": 5.992073342977718e-05, "cases": 7, "cases_prev_week": 10}, "E07000119": {"prevalence": 0.0001128243700639338, "cases": 9, "cases_prev_week": 10}, "E07000120": {"prevalence": 6.186970240673143e-05, "cases": 5, "cases_prev_week": 4}, "E07000121": {"prevalence": 1.386520250128253e-05, "cases": 2, "cases_prev_week": 3}, "E07000122": {"prevalence": 3.282096165417647e-05, "cases": 3, "cases_prev_week": 4}, "E07000123": {"prevalence": 4.935903763979184e-05, "cases": 7, "cases_prev_week": 20}, "E07000124": {"prevalence": 3.3301696721447955e-05, "cases": 2, "cases_prev_week": 3}, "E07000125": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000126": {"prevalence": 9.952319342785021e-05, "cases": 11, "cases_prev_week": 9}, "E07000127": {"prevalence": 3.510342346137307e-05, "cases": 4, "cases_prev_week": 3}, "E07000128": {"prevalence": 6.293662282081944e-05, "cases": 7, "cases_prev_week": 13}, "E07000129": {"prevalence": 5.974845898766194e-05, "cases": 6, "cases_prev_week": 4}, "E07000130": {"prevalence": 1.6425485783742055e-05, "cases": 3, "cases_prev_week": 6}, "E07000131": {"prevalence": 2.162185537140942e-05, "cases": 2, "cases_prev_week": 2}, "E07000132": {"prevalence": 6.226483904539107e-05, "cases": 7, "cases_prev_week": 7}, "E07000133": {"prevalence": 1.9569471624266145e-05, "cases": 1, "cases_prev_week": 3}, "E07000134": {"prevalence": 3.916730313534262e-05, "cases": 4, "cases_prev_week": 7}, "E07000135": {"prevalence": 5.2579921480650586e-05, "cases": 3, "cases_prev_week": 2}, "E07000136": {"prevalence": 1.4416284635123836e-05, "cases": 1, "cases_prev_week": 3}, "E07000137": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000138": {"prevalence": 2.0194064964306992e-05, "cases": 2, "cases_prev_week": 1}, "E07000139": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000140": {"prevalence": 2.128112364332837e-05, "cases": 2, "cases_prev_week": 0}, "E07000141": {"prevalence": 7.049551296060006e-06, "cases": 1, "cases_prev_week": 2}, "E07000142": {"prevalence": 2.108170213663051e-05, "cases": 2, "cases_prev_week": 2}, "E07000143": {"prevalence": 2.1531770126822127e-05, "cases": 3, "cases_prev_week": 1}, "E07000144": {"prevalence": 1.5448309954890935e-05, "cases": 2, "cases_prev_week": 1}, "E07000145": {"prevalence": 2.012679883264567e-05, "cases": 2, "cases_prev_week": 5}, "E07000146": {"prevalence": 1.9761413863290538e-05, "cases": 3, "cases_prev_week": 9}, "E07000147": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000148": {"prevalence": 1.4170628538228814e-05, "cases": 2, "cases_prev_week": 2}, "E07000149": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 2}, "E07000150": {"prevalence": 1.4118909455433662e-05, "cases": 1, "cases_prev_week": 3}, "E07000151": {"prevalence": 9.46924861512239e-05, "cases": 8, "cases_prev_week": 3}, "E07000152": {"prevalence": 3.1946840457478754e-05, "cases": 3, "cases_prev_week": 7}, "E07000153": {"prevalence": 1.9749965437560483e-05, "cases": 2, "cases_prev_week": 3}, "E07000154": {"prevalence": 0.00011548062146340596, "cases": 26, "cases_prev_week": 16}, "E07000155": {"prevalence": 9.728152191536507e-05, "cases": 9, "cases_prev_week": 5}, "E07000156": {"prevalence": 1.258209819069428e-05, "cases": 1, "cases_prev_week": 6}, "E07000163": {"prevalence": 1.759572072072072e-05, "cases": 1, "cases_prev_week": 1}, "E07000164": {"prevalence": 2.1945706322557992e-05, "cases": 2, "cases_prev_week": 4}, "E07000165": {"prevalence": 6.229248814885414e-05, "cases": 10, "cases_prev_week": 7}, "E07000166": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000167": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000168": {"prevalence": 9.196586227192466e-06, "cases": 1, "cases_prev_week": 3}, "E07000169": {"prevalence": 1.1222588826790564e-05, "cases": 1, "cases_prev_week": 1}, "E07000170": {"prevalence": 1.5729329694615065e-05, "cases": 2, "cases_prev_week": 2}, "E07000171": {"prevalence": 4.2793930108953346e-05, "cases": 5, "cases_prev_week": 9}, "E07000172": {"prevalence": 1.765661416766721e-05, "cases": 2, "cases_prev_week": 2}, "E07000173": {"prevalence": 1.6979946682967415e-05, "cases": 2, "cases_prev_week": 3}, "E07000174": {"prevalence": 1.8375428377174044e-05, "cases": 2, "cases_prev_week": 1}, "E07000175": {"prevalence": 1.6451968478028397e-05, "cases": 2, "cases_prev_week": 5}, "E07000176": {"prevalence": 8.498270601932506e-06, "cases": 1, "cases_prev_week": 4}, "E07000177": {"prevalence": 1.340833059579917e-05, "cases": 2, "cases_prev_week": 3}, "E07000178": {"prevalence": 3.2398737745177445e-05, "cases": 5, "cases_prev_week": 9}, "E07000179": {"prevalence": 1.4234470193019415e-05, "cases": 2, "cases_prev_week": 1}, "E07000180": {"prevalence": 7.477641850865911e-06, "cases": 1, "cases_prev_week": 2}, "E07000181": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 3}, "E07000187": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000188": {"prevalence": 8.14391934262283e-06, "cases": 1, "cases_prev_week": 9}, "E07000189": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 9}, "E07000192": {"prevalence": 1.997822373612762e-05, "cases": 2, "cases_prev_week": 2}, "E07000193": {"prevalence": 2.530065613034898e-05, "cases": 3, "cases_prev_week": 4}, "E07000194": {"prevalence": 4.809310825758669e-05, "cases": 5, "cases_prev_week": 3}, "E07000195": {"prevalence": 6.178083249671789e-05, "cases": 8, "cases_prev_week": 9}, "E07000196": {"prevalence": 6.242976651267325e-05, "cases": 7, "cases_prev_week": 4}, "E07000197": {"prevalence": 2.2078304386223137e-05, "cases": 3, "cases_prev_week": 2}, "E07000198": {"prevalence": 3.048873441263453e-05, "cases": 3, "cases_prev_week": 4}, "E07000199": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 3}, "E07000200": {"prevalence": 1.09407993347994e-05, "cases": 1, "cases_prev_week": 2}, "E07000202": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000203": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 4}, "E07000207": {"prevalence": 2.9277004376912154e-05, "cases": 4, "cases_prev_week": 2}, "E07000208": {"prevalence": 1.2511260134120709e-05, "cases": 1, "cases_prev_week": 1}, "E07000209": {"prevalence": 2.7047312511410586e-05, "cases": 4, "cases_prev_week": 1}, "E07000210": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000211": {"prevalence": 4.737508206041e-05, "cases": 7, "cases_prev_week": 2}, "E07000212": {"prevalence": 3.409090909090909e-05, "cases": 3, "cases_prev_week": 3}, "E07000213": {"prevalence": 1.0067046529889061e-05, "cases": 1, "cases_prev_week": 2}, "E07000214": {"prevalence": 1.125188469068569e-05, "cases": 1, "cases_prev_week": 1}, "E07000215": {"prevalence": 4.571637560574198e-05, "cases": 4, "cases_prev_week": 2}, "E07000216": {"prevalence": 7.961149590000796e-06, "cases": 1, "cases_prev_week": 1}, "E07000217": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000218": {"prevalence": 0.00013878180416345413, "cases": 9, "cases_prev_week": 9}, "E07000219": {"prevalence": 0.00020946145133512282, "cases": 27, "cases_prev_week": 28}, "E07000220": {"prevalence": 4.6644401738903296e-05, "cases": 5, "cases_prev_week": 3}, "E07000221": {"prevalence": 7.83821915660762e-06, "cases": 1, "cases_prev_week": 4}, "E07000222": {"prevalence": 2.1054995648634233e-05, "cases": 3, "cases_prev_week": 3}, "E07000223": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000224": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000225": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000226": {"prevalence": 6.225099601593625e-05, "cases": 7, "cases_prev_week": 4}, "E07000227": {"prevalence": 4.218904912914771e-05, "cases": 6, "cases_prev_week": 8}, "E07000228": {"prevalence": 1.3358625664591626e-05, "cases": 2, "cases_prev_week": 2}, "E07000229": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000234": {"prevalence": 1.0135614522308488e-05, "cases": 1, "cases_prev_week": 3}, "E07000235": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E07000236": {"prevalence": 7.059737142453729e-05, "cases": 6, "cases_prev_week": 4}, "E07000237": {"prevalence": 5.88864570963088e-05, "cases": 6, "cases_prev_week": 4}, "E07000238": {"prevalence": 7.852991989948171e-06, "cases": 1, "cases_prev_week": 3}, "E07000239": {"prevalence": 9.894915992163227e-06, "cases": 1, "cases_prev_week": 4}, "E07000240": {"prevalence": 6.785503450428505e-06, "cases": 1, "cases_prev_week": 3}, "E07000241": {"prevalence": 8.146904990793997e-06, "cases": 1, "cases_prev_week": 3}, "E07000242": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000243": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 1}, "E07000244": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 3}, "E07000245": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 7}, "E07000246": {"prevalence": 1.2998323216305096e-05, "cases": 2, "cases_prev_week": 24}, "E08000001": {"prevalence": 2.4529386204673197e-05, "cases": 7, "cases_prev_week": 11}, "E08000002": {"prevalence": 8.416268647295221e-05, "cases": 16, "cases_prev_week": 18}, "E08000003": {"prevalence": 9.678120326426564e-05, "cases": 53, "cases_prev_week": 44}, "E08000004": {"prevalence": 0.00011883389991639186, "cases": 28, "cases_prev_week": 23}, "E08000005": {"prevalence": 0.0001318175826473516, "cases": 29, "cases_prev_week": 24}, "E08000006": {"prevalence": 4.716832803999874e-05, "cases": 12, "cases_prev_week": 19}, "E08000007": {"prevalence": 4.112758118413161e-05, "cases": 12, "cases_prev_week": 6}, "E08000008": {"prevalence": 0.00020870615505535152, "cases": 47, "cases_prev_week": 47}, "E08000009": {"prevalence": 0.00010153572788424928, "cases": 24, "cases_prev_week": 12}, "E08000010": {"prevalence": 2.7599911680282623e-05, "cases": 9, "cases_prev_week": 10}, "E08000011": {"prevalence": 5.34863041632402e-05, "cases": 8, "cases_prev_week": 4}, "E08000012": {"prevalence": 2.0209614117628037e-05, "cases": 10, "cases_prev_week": 9}, "E08000013": {"prevalence": 1.6662130864375808e-05, "cases": 3, "cases_prev_week": 4}, "E08000014": {"prevalence": 5.809815683597438e-05, "cases": 16, "cases_prev_week": 7}, "E08000015": {"prevalence": 6.806193636208951e-05, "cases": 22, "cases_prev_week": 17}, "E08000016": {"prevalence": 0.00010195800146003858, "cases": 25, "cases_prev_week": 29}, "E08000017": {"prevalence": 5.7963174063411715e-05, "cases": 18, "cases_prev_week": 55}, "E08000018": {"prevalence": 7.178723774044001e-05, "cases": 19, "cases_prev_week": 23}, "E08000019": {"prevalence": 8.583602572334019e-05, "cases": 50, "cases_prev_week": 36}, "E08000021": {"prevalence": 1.998694186464843e-05, "cases": 6, "cases_prev_week": 9}, "E08000022": {"prevalence": 3.8837779449959946e-05, "cases": 8, "cases_prev_week": 9}, "E08000023": {"prevalence": 2.6619638638405482e-05, "cases": 4, "cases_prev_week": 2}, "E08000024": {"prevalence": 3.6046817606707593e-06, "cases": 1, "cases_prev_week": 4}, "E08000025": {"prevalence": 2.5407973197216688e-05, "cases": 29, "cases_prev_week": 45}, "E08000026": {"prevalence": 2.181114276756138e-05, "cases": 8, "cases_prev_week": 6}, "E08000027": {"prevalence": 6.237797309014241e-06, "cases": 2, "cases_prev_week": 7}, "E08000028": {"prevalence": 4.88731680198425e-05, "cases": 16, "cases_prev_week": 25}, "E08000029": {"prevalence": 1.8612529023912446e-05, "cases": 4, "cases_prev_week": 4}, "E08000030": {"prevalence": 2.117313270613809e-05, "cases": 6, "cases_prev_week": 7}, "E08000031": {"prevalence": 5.725016030044884e-05, "cases": 15, "cases_prev_week": 17}, "E08000032": {"prevalence": 6.1432722791354e-05, "cases": 33, "cases_prev_week": 30}, "E08000033": {"prevalence": 4.760046077246028e-06, "cases": 1, "cases_prev_week": 3}, "E08000034": {"prevalence": 3.418982647523403e-05, "cases": 15, "cases_prev_week": 15}, "E08000035": {"prevalence": 2.7876542396419637e-05, "cases": 22, "cases_prev_week": 21}, "E08000036": {"prevalence": 2.6084083492253028e-05, "cases": 9, "cases_prev_week": 22}, "E08000037": {"prevalence": 1.4814229561301282e-05, "cases": 3, "cases_prev_week": 4}, "E09000001": {"prevalence": 0.0, "cases": 0, "cases_prev_week": 0}, "E09000002": {"prevalence": 9.434051264634573e-06, "cases": 2, "cases_prev_week": 3}, "E09000003": {"prevalence": 1.0200438618860612e-05, "cases": 4, "cases_prev_week": 5}, "E09000004": {"prevalence": 1.2133075572883386e-05, "cases": 3, "cases_prev_week": 5}, "E09000005": {"prevalence": 2.7207182696231806e-05, "cases": 9, "cases_prev_week": 9}, "E09000006": {"prevalence": 6.04054413221543e-06, "cases": 2, "cases_prev_week": 6}, "E09000007": {"prevalence": 1.1440513145149604e-05, "cases": 3, "cases_prev_week": 2}, "E09000008": {"prevalence": 7.785211212780202e-06, "cases": 3, "cases_prev_week": 5}, "E09000009": {"prevalence": 2.6317174588136217e-05, "cases": 9, "cases_prev_week": 11}, "E09000010": {"prevalence": 2.9951867349169882e-06, "cases": 1, "cases_prev_week": 2}, "E09000011": {"prevalence": 1.0482693073735263e-05, "cases": 3, "cases_prev_week": 5}, "E09000012": {"prevalence": 7.151413298053028e-06, "cases": 2, "cases_prev_week": 6}, "E09000013": {"prevalence": 2.1571947839030124e-05, "cases": 4, "cases_prev_week": 5}, "E09000014": {"prevalence": 3.695163769658271e-06, "cases": 1, "cases_prev_week": 1}, "E09000015": {"prevalence": 2.7983321940123685e-05, "cases": 7, "cases_prev_week": 9}, "E09000016": {"prevalence": 1.9394127458205656e-05, "cases": 5, "cases_prev_week": 7}, "E09000017": {"prevalence": 2.624465265202215e-05, "cases": 8, "cases_prev_week": 4}, "E09000018": {"prevalence": 5.1702107230170395e-05, "cases": 14, "cases_prev_week": 16}, "E09000019": {"prevalence": 1.672646377466108e-05, "cases": 4, "cases_prev_week": 1}, "E09000020": {"prevalence": 1.9206514849837065e-05, "cases": 3, "cases_prev_week": 4}, "E09000021": {"prevalence": 1.7096939647803045e-05, "cases": 3, "cases_prev_week": 4}, "E09000022": {"prevalence": 6.136531693652065e-06, "cases": 2, "cases_prev_week": 3}, "E09000023": {"prevalence": 6.589004269674767e-06, "cases": 2, "cases_prev_week": 5}, "E09000024": {"prevalence": 1.4549969445064165e-05, "cases": 3, "cases_prev_week": 3}, "E09000025": {"prevalence": 8.52260621297993e-06, "cases": 3, "cases_prev_week": 4}, "E09000026": {"prevalence": 1.3164043730953274e-05, "cases": 4, "cases_prev_week": 4}, "E09000027": {"prevalence": 5.078616991021005e-06, "cases": 1, "cases_prev_week": 5}, "E09000028": {"prevalence": 6.304057291272663e-06, "cases": 2, "cases_prev_week": 3}, "E09000029": {"prevalence": 2.9336266960029337e-05, "cases": 6, "cases_prev_week": 8}, "E09000030": {"prevalence": 2.2033018051336932e-05, "cases": 7, "cases_prev_week": 3}, "E09000031": {"prevalence": 7.228044813877846e-06, "cases": 2, "cases_prev_week": 3}, "E09000032": {"prevalence": 3.0630310530088155e-06, "cases": 1, "cases_prev_week": 4}, "E09000033": {"prevalence": 3.5249330262725006e-05, "cases": 9, "cases_prev_week": 11}};
+
+var map = new mapboxgl.Map({
+  container: 'map',
+  style: '/style.json',
+  center: [-1.82, 53],
+  zoom: 6,
+  maxBounds: [
+    [-17.1, 49.4],
+    [11.2, 61.4]
+  ]
+});
+map.touchZoomRotate.disableRotation();
+map.addControl(new mapboxgl.NavigationControl());
+
+map.on('load', () => {
+
+  const max_prevalence = Math.max(...Object.entries(data).map((v) => v[1]['prevalence']));
+
+  const colours = ['#fef0d9', '#fdcc8a', '#fc8d59', '#d7301f'];
+  const zero_colour = '#ececec';
+
+  var expression = ['match', ['get', 'lad19cd']];
+
+  for (const gss_id in data) {
+    var colour = null;
+    if (data[gss_id]['cases'] == 0) { 
+      colour = zero_colour;
+    } else {
+      const idx = Math.round((data[gss_id]['prevalence'] / max_prevalence) * (colours.length - 1));
+      colour = colours[idx];
+    }
+    expression.push(gss_id, colour);
+  }
+  expression.push('#ffffff');
+
+  map.addLayer({
+    'id': 'la_cases',
+    'type': 'fill',
+    // Filter to restrict to English LAs only at the moment
+    'filter': ['==', ['slice', ['get', 'lad19cd'], 0, 1], 'E'], 
+    'source': 'local_authorities',
+    'source-layer': 'local_authorities',
+    'paint': {
+      'fill-color': expression,
+      'fill-opacity': 0.7
+    }
+  }, 'la_boundary');
+
+
+  map.on('click', 'la_cases', function(e) {
+    var feature = e.features[0];
+    let html = "<h3>" + feature.properties.lad19nm + "</h3>";
+
+    html += "<p>Weekly cases: " + data[feature.properties.lad19cd]['cases'] + "</p>"
+    html += "<p>Prevalence: " + (data[feature.properties.lad19cd]['prevalence'] * 100000).toFixed(2) + " per 100,000</p>"
+    new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
+  });
+
+  map.on('mouseenter', 'la_cases', function() {
+    map.getCanvas().style.cursor = 'pointer';
+  });
+
+  map.on('mouseleave', 'la_cases', function() {
+    map.getCanvas().style.cursor = '';
+  });
+});
+
+</script>
+
+  <div id="footer">
+    <p>Made by <a href="https://russ.garrett.co.uk">Russ Garrett</a> (<a href="https://twitter.com/russss">@russss</a>), code <a href="https://github.com/russss/covidtracker">on Github</a>. Page updated on 2020-06-19 21:27:43.575093.</p>
+  </div>
+  <script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.0.2.min.js"></script>
+  <script src="https://cdn.bokeh.org/bokeh/release/bokeh-api-2.0.2.min.js"></script>
+  
+  <script>
+    const graphs = [];
+    window.onload = (ev) => {
+      for (graph of graphs) {
+        Bokeh.embed.embed_item(graph);
+      }
+    };
+  </script>
+  
+</body>
+</html>
