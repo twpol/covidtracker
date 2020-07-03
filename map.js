@@ -19,7 +19,12 @@ function makeGraph(width, height, data) {
   return draw;
 }
 
-function styleExpression(data, propname, colours, zero_colour, max_prevalence) {
+function styleExpression(data, propname, colours, zero_colour) {
+  const max_prevalence = Math.min(Math.max(
+    ...Object.entries(data).map(v => v[1]['prevalence']),
+    15/100000 // Maximum won't go below 15 per 100,000
+  ), 75/100000);
+
   var expression = ['match', ['get', propname]];
 
   for (const gss_id in data) {
@@ -95,30 +100,20 @@ function initMap(data) {
       12, 0.5
     ];
 
-    const max_prevalence = Math.min(Math.max(
-      ...Object.entries(data.england).map(v => v[1]['prevalence']),
-      ...Object.entries(data.wales).map(v => v[1]['prevalence']),
-      ...Object.entries(data.scotland).map(v => v[1]['prevalence']),
-      15/100000 // Maximum won't go below 15 per 100,000
-    ), 75/100000);
-
-    const colour_ramp = ['#fef0d9','#fdd49e','#fdbb84','#fc8d59','#e34a33','#b30000'];
-
     map.addLayer(
       {
         id: 'england_cases',
         type: 'fill',
         // Filter to restrict to English LAs only
-        filter: ['==', ['slice', ['get', 'lad19cd'], 0, 1], 'E'],
+        filter: ['==', ['slice', ['get', 'ctyua19cd'], 0, 1], 'E'],
         source: 'areas',
-        'source-layer': 'local_authorities',
+        'source-layer': 'utla',
         paint: {
           'fill-color': styleExpression(
             data.england,
-            'lad19cd',
-            colour_ramp,
+            'ctyua19cd',
+            ['#fef0d9','#fdd49e','#fdbb84','#fc8d59','#e34a33','#b30000'],
             '#ececec',
-            max_prevalence
           ),
           'fill-opacity': opacity_func,
         },
@@ -138,9 +133,8 @@ function initMap(data) {
           'fill-color': styleExpression(
             data.wales,
             'lad19cd',
-            colour_ramp,
+            ['#edf8fb','#bfd3e6','#9ebcda','#8c96c6','#8856a7','#810f7c'],
             '#ececec',
-            max_prevalence
           ),
           'fill-opacity': 0.7,
         },
@@ -158,9 +152,8 @@ function initMap(data) {
           'fill-color': styleExpression(
             data.scotland,
             'HBCode',
-            colour_ramp,
+            ['#edf8fb','#b2e2e2','#66c2a4','#238b45'],
             '#ececec',
-            max_prevalence
           ),
           'fill-opacity': 0.7,
         },
@@ -171,7 +164,7 @@ function initMap(data) {
     map.on(
       'click',
       'england_cases',
-      popupRenderer(map, data.england, 'lad19nm', 'lad19cd'),
+      popupRenderer(map, data.england, 'ctyua19nm', 'ctyua19cd'),
     );
     map.on(
       'click',
